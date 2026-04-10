@@ -1,0 +1,17 @@
+$kind: http-request
+url: http://localhost:3000/api/transactions
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"fromAccount\":\"69cfdea354374779ed724a8f\",\r
+
+    \"toAccount\":\"69cfd1e63fdb6873dc2635d5\",\r
+
+    \"amount\":2000,\r
+
+    \"idempotencyKey\":\"019c0e31-9261-7ff2-9796-17f9af57355d\"\r
+
+    }"
+order: 2000

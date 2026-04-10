@@ -1,0 +1,7 @@
+$kind: http-request
+url: http://localhost:3000/api/transactions/system/initial-funds
+method: POST
+body:
+  type: json
+  content: '{"toAccount":"69cfdea354374779ed724a8f","amount":10000,"idempotencyKey":"61adeaeb-23ae-42b9-a1e6-ff5481f6a7c1"}'
+order: 1000

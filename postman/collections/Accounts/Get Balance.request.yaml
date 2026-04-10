@@ -1,0 +1,6 @@
+$kind: http-request
+url: http://localhost:3000/api/accounts/balance/69cfdea354374779ed724a8f
+method: GET
+headers:
+  Authorization: Bearer {{systemToken}}
+order: 3000

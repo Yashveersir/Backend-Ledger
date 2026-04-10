@@ -1,0 +1,21 @@
+$kind: http-request
+url: http://localhost:3000/api/auth/login
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \   \"email\":\"yashveer@gmail.com\",\r
+
+    \   \"password\":\"yashveer1\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: |-
+      const res = pm.response.json();
+      if (res.token) {
+          pm.collectionVariables.set("systemToken", res.token);
+      }
+    language: text/javascript
+order: 2000
