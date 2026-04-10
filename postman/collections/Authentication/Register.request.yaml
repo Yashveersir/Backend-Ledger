@@ -3,13 +3,41 @@ url: http://localhost:3000/api/auth/register
 method: POST
 body:
   type: json
-  content: "{\r
+  content: |-
+    {
+        "email": "yashveer@gmail.com",
+        "password": "yashveer1",
+        "name": "Yashveer"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const res = pm.response.json();
 
-    \    \"email\":\"yashveer@gmail.com\",\r
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
 
-    \    \"password\": \"yashveer1\",\r
+      pm.test("Response has user object with _id, email, name", function () {
+          pm.expect(res).to.have.property("user");
+          pm.expect(res.user).to.have.property("_id");
+          pm.expect(res.user).to.have.property("email");
+          pm.expect(res.user).to.have.property("name");
+      });
 
-    \    \"name\":\"Yashveer\"\r
+      pm.test("Response has a token string", function () {
+          pm.expect(res).to.have.property("token");
+          pm.expect(res.token).to.be.a("string");
+      });
 
-    }"
+      pm.test("user.email equals yashveer@gmail.com", function () {
+          pm.expect(res.user.email).to.eql("yashveer@gmail.com");
+      });
+
+      pm.test("user.name equals Yashveer", function () {
+          pm.expect(res.user.name).to.eql("Yashveer");
+      });
+
+      pm.collectionVariables.set("authToken", res.token);
 order: 1000

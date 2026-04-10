@@ -1,6 +1,32 @@
 $kind: http-request
-url: http://localhost:3000/api/accounts/balance/69cfdea354374779ed724a8f
+url: 'http://localhost:3000/api/accounts/balance/{{accountId}}'
 method: GET
-headers:
-  Authorization: Bearer {{systemToken}}
 order: 3000
+headers:
+  - key: Authorization
+    value: 'Bearer {{authToken}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const res = pm.response.json();
+
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has accountId field", function () {
+          pm.expect(res).to.have.property("accountId");
+      });
+
+      pm.test("Response has balance field", function () {
+          pm.expect(res).to.have.property("balance");
+      });
+
+      pm.test("balance is a number", function () {
+          pm.expect(res.balance).to.be.a("number");
+      });
+
+      pm.test("balance is greater than or equal to 0", function () {
+          pm.expect(res.balance).to.be.at.least(0);
+      });

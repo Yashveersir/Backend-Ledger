@@ -2,3 +2,27 @@ $kind: http-request
 url: http://localhost:3000/api/accounts
 method: GET
 order: 1000
+headers:
+  - key: Authorization
+    value: 'Bearer {{authToken}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const res = pm.response.json();
+
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has accounts array", function () {
+          pm.expect(res).to.have.property("accounts");
+      });
+
+      pm.test("accounts is an array", function () {
+          pm.expect(res.accounts).to.be.an("array");
+      });
+
+      pm.test("accounts array length is greater than 0", function () {
+          pm.expect(res.accounts.length).to.be.above(0);
+      });

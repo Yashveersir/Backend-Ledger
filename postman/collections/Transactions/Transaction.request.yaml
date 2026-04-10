@@ -1,17 +1,64 @@
 $kind: http-request
 url: http://localhost:3000/api/transactions
 method: POST
+headers:
+  - key: Authorization
+    value: 'Bearer {{authToken}}'
 body:
   type: json
-  content: "{\r
-
-    \    \"fromAccount\":\"69cfdea354374779ed724a8f\",\r
-
-    \"toAccount\":\"69cfd1e63fdb6873dc2635d5\",\r
-
-    \"amount\":2000,\r
-
-    \"idempotencyKey\":\"019c0e31-9261-7ff2-9796-17f9af57355d\"\r
-
-    }"
+  content: |-
+    {
+        "fromAccount":"69cfdea354374779ed724a8f",
+        "toAccount":"69cfd1e63fdb6873dc2635d5",
+        "amount":2000,
+        "idempotencyKey":"019c0e31-9261-7ff2-9796-17f9af57355d"
+    }
 order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response has message field", function () {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property("message");
+      });
+
+      pm.test("message equals 'Transaction completed successfully'", function () {
+          const json = pm.response.json();
+          pm.expect(json.message).to.eql("Transaction completed successfully");
+      });
+
+      pm.test("Response has transaction object", function () {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property("transaction");
+          pm.expect(json.transaction).to.be.an("object");
+      });
+
+      pm.test("transaction._id exists", function () {
+          const json = pm.response.json();
+          pm.expect(json.transaction).to.have.property("_id");
+      });
+
+      pm.test("transaction.status equals 'PENDING'", function () {
+          const json = pm.response.json();
+          pm.expect(json.transaction.status).to.eql("PENDING");
+      });
+
+      pm.test("transaction.amount equals 2000", function () {
+          const json = pm.response.json();
+          pm.expect(json.transaction.amount).to.eql(2000);
+      });
+
+      pm.test("transaction.fromAccount equals '69cfdea354374779ed724a8f'", function () {
+          const json = pm.response.json();
+          pm.expect(json.transaction.fromAccount).to.eql("69cfdea354374779ed724a8f");
+      });
+
+      pm.test("transaction.toAccount equals '69cfd1e63fdb6873dc2635d5'", function () {
+          const json = pm.response.json();
+          pm.expect(json.transaction.toAccount).to.eql("69cfd1e63fdb6873dc2635d5");
+      });

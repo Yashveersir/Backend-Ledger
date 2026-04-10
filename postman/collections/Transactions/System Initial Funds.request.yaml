@@ -1,7 +1,48 @@
 $kind: http-request
 url: http://localhost:3000/api/transactions/system/initial-funds
 method: POST
+headers:
+  - key: Authorization
+    value: 'Bearer {{systemToken}}'
 body:
   type: json
   content: '{"toAccount":"69cfdea354374779ed724a8f","amount":10000,"idempotencyKey":"61adeaeb-23ae-42b9-a1e6-ff5481f6a7c1"}'
 order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response has message field", function () {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property("message");
+      });
+
+      pm.test("message equals 'Initial funds transaction completed successfully'", function () {
+          const json = pm.response.json();
+          pm.expect(json.message).to.eql("Initial funds transaction completed successfully");
+      });
+
+      pm.test("Response has transaction object", function () {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property("transaction");
+          pm.expect(json.transaction).to.be.an("object");
+      });
+
+      pm.test("transaction._id exists", function () {
+          const json = pm.response.json();
+          pm.expect(json.transaction).to.have.property("_id");
+      });
+
+      pm.test("transaction.amount equals 10000", function () {
+          const json = pm.response.json();
+          pm.expect(json.transaction.amount).to.eql(10000);
+      });
+
+      pm.test("transaction.toAccount equals '69cfdea354374779ed724a8f'", function () {
+          const json = pm.response.json();
+          pm.expect(json.transaction.toAccount).to.eql("69cfdea354374779ed724a8f");
+      });

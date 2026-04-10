@@ -1,4 +1,24 @@
 $kind: http-request
 url: http://localhost:3000/api/auth/logout
 method: POST
+headers:
+  - key: Authorization
+    value: 'Bearer {{authToken}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const res = pm.response.json();
+
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has message field", function () {
+          pm.expect(res).to.have.property("message");
+      });
+
+      pm.test("message equals User logged out successfully", function () {
+          pm.expect(res.message).to.eql("User logged out successfully");
+      });
 order: 3000

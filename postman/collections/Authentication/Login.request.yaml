@@ -3,19 +3,40 @@ url: http://localhost:3000/api/auth/login
 method: POST
 body:
   type: json
-  content: "{\r
-
-    \   \"email\":\"yashveer@gmail.com\",\r
-
-    \   \"password\":\"yashveer1\"\r
-
-    }"
+  content: |-
+    {
+        "email": "yashveer@gmail.com",
+        "password": "yashveer1"
+    }
 scripts:
   - type: afterResponse
+    language: text/javascript
     code: |-
       const res = pm.response.json();
+
       if (res.token) {
           pm.collectionVariables.set("systemToken", res.token);
       }
-    language: text/javascript
+
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has user object with _id, email, name", function () {
+          pm.expect(res).to.have.property("user");
+          pm.expect(res.user).to.have.property("_id");
+          pm.expect(res.user).to.have.property("email");
+          pm.expect(res.user).to.have.property("name");
+      });
+
+      pm.test("Response has a token string", function () {
+          pm.expect(res).to.have.property("token");
+          pm.expect(res.token).to.be.a("string");
+      });
+
+      pm.test("user.email equals yashveer@gmail.com", function () {
+          pm.expect(res.user.email).to.eql("yashveer@gmail.com");
+      });
+
+      pm.collectionVariables.set("authToken", res.token);
 order: 2000

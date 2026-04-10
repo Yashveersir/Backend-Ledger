@@ -2,3 +2,37 @@ $kind: http-request
 url: http://localhost:3000/api/accounts
 method: POST
 order: 2000
+headers:
+  - key: Authorization
+    value: 'Bearer {{authToken}}'
+body:
+  type: json
+  content: '{}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const res = pm.response.json();
+
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response has account object", function () {
+          pm.expect(res).to.have.property("account");
+          pm.expect(res.account).to.be.an("object");
+      });
+
+      pm.test("account._id exists", function () {
+          pm.expect(res.account).to.have.property("_id");
+      });
+
+      pm.test("account.user exists", function () {
+          pm.expect(res.account).to.have.property("user");
+      });
+
+      pm.test("account.status equals ACTIVE", function () {
+          pm.expect(res.account.status).to.eql("ACTIVE");
+      });
+
+      pm.collectionVariables.set("accountId", res.account._id);
