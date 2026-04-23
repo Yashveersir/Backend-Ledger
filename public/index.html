@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backend Ledger API</title>
+<meta name="description" content="Secure ledger management REST API with authentication, accounts & transactions">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--surface:#111827;--card:#1a2235;--border:#2a3450;--primary:#6366f1;--primary-glow:#818cf855;--accent:#22d3ee;--green:#34d399;--red:#f87171;--yellow:#fbbf24;--text:#e2e8f0;--muted:#94a3b8;--code-bg:#0d1117}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+.glow-orb{position:fixed;border-radius:50%;filter:blur(120px);opacity:.15;pointer-events:none;z-index:0}
+.orb1{width:500px;height:500px;background:var(--primary);top:-100px;right:-100px}
+.orb2{width:400px;height:400px;background:var(--accent);bottom:-50px;left:-100px}
+.container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* NAV */
+nav{padding:20px 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.25rem}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.status-badge{display:flex;align-items:center;gap:6px;background:#34d39920;border:1px solid #34d39940;padding:6px 14px;border-radius:20px;font-size:.8rem;color:var(--green)}
+.status-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* HERO */
+.hero{text-align:center;padding:80px 0 60px}
+.hero h1{font-size:3rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px}
+.hero p{color:var(--muted);font-size:1.1rem;max-width:550px;margin:0 auto 32px}
+.hero-badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.badge{padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:500;border:1px solid var(--border);background:var(--card)}
+.badge.purple{border-color:#6366f140;color:#a5b4fc}
+.badge.cyan{border-color:#22d3ee40;color:#67e8f9}
+.badge.green{border-color:#34d39940;color:#6ee7b7}
+
+/* BASE URL */
+.base-url{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:48px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.base-url label{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.base-url code{font-size:1rem;color:var(--accent);font-family:'Fira Code',monospace;word-break:break-all}
+.copy-btn{background:var(--primary);border:none;color:#fff;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:500;transition:.2s}
+.copy-btn:hover{opacity:.85}
+
+/* SECTION */
+.section{margin-bottom:48px}
+.section-title{font-size:1.4rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.section-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+
+/* ENDPOINT CARD */
+.endpoint{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;transition:.2s}
+.endpoint:hover{border-color:#6366f160;box-shadow:0 0 20px #6366f110}
+.endpoint-header{padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer}
+.method{padding:4px 12px;border-radius:6px;font-size:.75rem;font-weight:700;letter-spacing:.5px;min-width:60px;text-align:center}
+.method.get{background:#34d39920;color:var(--green);border:1px solid #34d39940}
+.method.post{background:#6366f120;color:#a5b4fc;border:1px solid #6366f140}
+.endpoint-path{font-family:'Fira Code',monospace;font-size:.9rem;color:var(--text)}
+.endpoint-desc{color:var(--muted);font-size:.8rem;margin-left:auto}
+.lock{color:var(--yellow);font-size:.85rem;margin-left:8px}
+.endpoint-body{padding:0 20px 16px;display:none;border-top:1px solid var(--border)}
+.endpoint-body.open{display:block;padding-top:16px}
+.endpoint-body pre{background:var(--code-bg);padding:14px;border-radius:8px;overflow-x:auto;font-size:.82rem;line-height:1.7;color:#e2e8f0}
+.endpoint-body h4{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;margin-top:14px}
+.endpoint-body h4:first-child{margin-top:0}
+
+/* FEATURES */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:48px}
+.feature{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;transition:.2s}
+.feature:hover{border-color:var(--primary);transform:translateY(-2px)}
+.feature-icon{font-size:28px;margin-bottom:12px}
+.feature h3{font-size:1rem;margin-bottom:6px}
+.feature p{font-size:.85rem;color:var(--muted)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:32px 0;text-align:center;color:var(--muted);font-size:.85rem}
+footer a{color:var(--accent);text-decoration:none}
+
+/* TRY IT */
+.try-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:48px}
+.try-section h3{margin-bottom:16px;font-size:1.1rem}
+.try-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.try-row select,.try-row input{background:var(--code-bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.85rem;font-family:'Inter',sans-serif}
+.try-row select{min-width:100px}
+.try-row input{flex:1;min-width:200px}
+.try-btn{background:linear-gradient(135deg,var(--primary),#7c3aed);border:none;color:#fff;padding:10px 24px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;transition:.2s}
+.try-btn:hover{opacity:.9;transform:scale(1.02)}
+#try-output{background:var(--code-bg);border-radius:8px;padding:16px;font-family:'Fira Code',monospace;font-size:.82rem;min-height:60px;white-space:pre-wrap;word-break:break-all;color:var(--green);margin-top:12px;display:none}
+
+@media(max-width:640px){
+.hero h1{font-size:2rem}
+.endpoint-desc{display:none}
+.base-url{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+<div class="container">
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">📒</div>
+    Backend Ledger
+  </div>
+  <div class="status-badge"><div class="status-dot"></div> API Online</div>
+</nav>
+
+<section class="hero">
+  <h1>Backend Ledger API</h1>
+  <p>A secure, scalable ledger management REST API with JWT authentication, account management & atomic transactions.</p>
+  <div class="hero-badges">
+    <span class="badge purple">Node.js + Express</span>
+    <span class="badge cyan">MongoDB Atlas</span>
+    <span class="badge green">JWT Auth</span>
+  </div>
+</section>
+
+<div class="base-url">
+  <div>
+    <label>Base URL</label><br>
+    <code id="base-url-text">https://backend-ledger-8to4.onrender.com</code>
+  </div>
+  <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('base-url-text').textContent);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+</div>
+
+<div class="features">
+  <div class="feature"><div class="feature-icon">🔐</div><h3>JWT Authentication</h3><p>Secure token-based auth with bcrypt password hashing & token blacklisting on logout.</p></div>
+  <div class="feature"><div class="feature-icon">💰</div><h3>Ledger-Based Balances</h3><p>Double-entry bookkeeping with immutable ledger entries. Balances derived from credit/debit aggregation.</p></div>
+  <div class="feature"><div class="feature-icon">⚡</div><h3>Atomic Transactions</h3><p>MongoDB sessions ensure ACID compliance. Idempotency keys prevent duplicate processing.</p></div>
+  <div class="feature"><div class="feature-icon">📧</div><h3>Email Notifications</h3><p>Automated emails via Gmail OAuth2 for registration confirmations and transaction alerts.</p></div>
+</div>
+
+<!-- TRY IT -->
+<div class="try-section">
+  <h3>⚡ Try It Live</h3>
+  <div class="try-row">
+    <select id="try-method">
+      <option value="GET">GET</option>
+      <option value="POST">POST</option>
+    </select>
+    <input id="try-url" type="text" value="https://backend-ledger-8to4.onrender.com/api/auth/register" placeholder="Enter endpoint URL">
+    <button class="try-btn" onclick="tryRequest()">Send</button>
+  </div>
+  <div class="try-row">
+    <input id="try-body" type="text" placeholder='Body JSON (for POST): {"name":"Test","email":"test@test.com","password":"test123"}' style="width:100%">
+  </div>
+  <div id="try-output"></div>
+</div>
+
+<!-- AUTH ENDPOINTS -->
+<div class="section">
+  <div class="section-title"><div class="section-icon" style="background:#6366f120;color:#a5b4fc">🔑</div> Authentication</div>
+
+  <div class="endpoint" onclick="toggleBody(this)">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/api/auth/register</span>
+      <span class="endpoint-desc">Register a new user</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Request Body</h4>
+      <pre>{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword123"
+}</pre>
+      <h4>Response 201</h4>
+      <pre>{
+  "user": { "_id": "...", "email": "...", "name": "..." },
+  "token": "jwt_token_here"
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint" onclick="toggleBody(this)">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/api/auth/login</span>
+      <span class="endpoint-desc">Login & get token</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Request Body</h4>
+      <pre>{
+  "email": "john@example.com",
+  "password": "securepassword123"
+}</pre>
+      <h4>Response 200</h4>
+      <pre>{
+  "user": { "_id": "...", "email": "...", "name": "..." },
+  "token": "jwt_token_here"
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint" onclick="toggleBody(this)">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/api/auth/logout</span>
+      <span class="endpoint-desc">Logout & blacklist token</span>
+      <span class="lock">🔒</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Headers</h4>
+      <pre>Authorization: Bearer &lt;token&gt;</pre>
+      <h4>Response 200</h4>
+      <pre>{ "message": "User logged out successfully" }</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT ENDPOINTS -->
+<div class="section">
+  <div class="section-title"><div class="section-icon" style="background:#34d39920;color:#6ee7b7">🏦</div> Accounts</div>
+
+  <div class="endpoint" onclick="toggleBody(this)">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/api/accounts/</span>
+      <span class="endpoint-desc">Create account</span>
+      <span class="lock">🔒</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Headers</h4>
+      <pre>Authorization: Bearer &lt;token&gt;</pre>
+      <h4>Response 201</h4>
+      <pre>{
+  "account": {
+    "_id": "...", "user": "...",
+    "status": "ACTIVE", "currency": "INR"
+  }
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint" onclick="toggleBody(this)">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/api/accounts/</span>
+      <span class="endpoint-desc">Get user accounts</span>
+      <span class="lock">🔒</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Headers</h4>
+      <pre>Authorization: Bearer &lt;token&gt;</pre>
+      <h4>Response 200</h4>
+      <pre>{ "accounts": [ { "_id": "...", "status": "ACTIVE", ... } ] }</pre>
+    </div>
+  </div>
+
+  <div class="endpoint" onclick="toggleBody(this)">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/api/accounts/balance/:accountId</span>
+      <span class="endpoint-desc">Get account balance</span>
+      <span class="lock">🔒</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Headers</h4>
+      <pre>Authorization: Bearer &lt;token&gt;</pre>
+      <h4>Response 200</h4>
+      <pre>{ "accountId": "...", "balance": 1000 }</pre>
+    </div>
+  </div>
+</div>
+
+<!-- TRANSACTION ENDPOINTS -->
+<div class="section">
+  <div class="section-title"><div class="section-icon" style="background:#fbbf2420;color:#fcd34d">💸</div> Transactions</div>
+
+  <div class="endpoint" onclick="toggleBody(this)">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/api/transactions/</span>
+      <span class="endpoint-desc">Transfer funds</span>
+      <span class="lock">🔒</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Request Body</h4>
+      <pre>{
+  "fromAccount": "account_id_1",
+  "toAccount": "account_id_2",
+  "amount": 500,
+  "idempotencyKey": "unique_key_123"
+}</pre>
+      <h4>Response 201</h4>
+      <pre>{
+  "message": "Transaction completed successfully",
+  "transaction": { "_id": "...", "status": "COMPLETED", ... }
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint" onclick="toggleBody(this)">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/api/transactions/system/initial-funds</span>
+      <span class="endpoint-desc">System: add initial funds</span>
+      <span class="lock" title="System user only">⚙️🔒</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Headers</h4>
+      <pre>Authorization: Bearer &lt;system_token&gt;</pre>
+      <h4>Request Body</h4>
+      <pre>{
+  "toAccount": "account_id",
+  "amount": 10000,
+  "idempotencyKey": "unique_key_456"
+}</pre>
+      <h4>Response 201</h4>
+      <pre>{
+  "message": "Initial funds transaction completed successfully",
+  "transaction": { ... }
+}</pre>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Built by <a href="https://github.com/Yashveersir" target="_blank">Yashveer Singh</a> &nbsp;·&nbsp;
+  <a href="https://github.com/Yashveersir/Backend-Ledger" target="_blank">GitHub Repo</a>
+</footer>
+
+</div>
+
+<script>
+function toggleBody(el){
+  const body=el.querySelector('.endpoint-body');
+  body.classList.toggle('open');
+}
+async function tryRequest(){
+  const method=document.getElementById('try-method').value;
+  const url=document.getElementById('try-url').value;
+  const bodyInput=document.getElementById('try-body').value;
+  const output=document.getElementById('try-output');
+  output.style.display='block';
+  output.style.color='var(--muted)';
+  output.textContent='Sending request...';
+  try{
+    const opts={method,headers:{'Content-Type':'application/json'}};
+    if(method==='POST'&&bodyInput)opts.body=bodyInput;
+    const res=await fetch(url,opts);
+    const data=await res.json();
+    output.style.color=res.ok?'var(--green)':'var(--red)';
+    output.textContent=`Status: ${res.status}\n\n`+JSON.stringify(data,null,2);
+  }catch(e){
+    output.style.color='var(--red)';
+    output.textContent='Error: '+e.message;
+  }
+}
+</script>
+</body>
+</html>

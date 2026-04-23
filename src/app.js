@@ -1,13 +1,25 @@
 const express = require("express")
 const cookieParser = require("cookie-parser")
+const path = require("path")
 
 
 
 const app = express()
 
+// CORS headers for API access
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*")
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+    if (req.method === "OPTIONS") return res.sendStatus(200)
+    next()
+})
 
 app.use(express.json())
 app.use(cookieParser())
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, "..", "public")))
 
 /**
  * - Routes required
@@ -21,7 +33,7 @@ const transactionRoutes = require("./routes/transaction.routes")
  */
 
 app.get("/", (req, res) => {
-    res.send("Ledger Service is up and running")
+    res.sendFile(path.join(__dirname, "..", "public", "index.html"))
 })
 
 app.use("/api/auth", authRouter)
